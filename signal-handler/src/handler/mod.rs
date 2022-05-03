@@ -5,6 +5,8 @@ use crate::register::RegisterError;
 //
 pub mod builder;
 mod std_;
+#[cfg(feature = "tokio")]
+mod tokio;
 
 pub use builder::Builder;
 

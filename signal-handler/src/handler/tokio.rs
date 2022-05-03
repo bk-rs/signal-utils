@@ -1,10 +1,6 @@
-use core::time::Duration;
-use std::{
-    collections::HashMap,
-    panic,
-    sync::mpsc::{channel, sync_channel, RecvTimeoutError},
-    thread::spawn,
-};
+use std::{collections::HashMap, panic};
+
+use tokio::{spawn, sync::mpsc::unbounded_channel};
 
 use crate::{
     callback::{Callback, CallbackInfo, CallbackType},
@@ -14,20 +10,16 @@ use crate::{
 
 //
 impl Handler {
-    pub fn handle(self) -> Result<(), HandleError> {
+    pub async fn handle_async(self) -> Result<(), HandleError> {
         let Builder {
             callbacks,
             registers,
         } = self.builder;
 
-        if callbacks.has_async() {
-            return Err(HandleError::AsyncRequired);
-        }
-
         //
         //
         //
-        let (register_tx, register_rx) = sync_channel::<RegisterType>(0);
+        let (register_tx, mut register_rx) = unbounded_channel::<RegisterType>();
 
         let _sig_id_map = registers
             .register(register_tx)
@@ -56,14 +48,15 @@ impl Handler {
                 CallbackType::PrintStats => {}
             }
 
-            let (tx, rx) = channel::<CallbackInfo>();
+            let (tx, mut rx) = unbounded_channel::<CallbackInfo>();
 
-            let join_handle = spawn(move || {
+            let join_handle = spawn(async move {
                 let mut latest_finish_time = None;
 
+                #[allow(clippy::while_let_loop)]
                 loop {
-                    match rx.recv_timeout(Duration::from_secs(30)) {
-                        Ok(info) => {
+                    match rx.recv().await {
+                        Some(info) => {
                             let time = info.time().to_owned();
 
                             if let Some(latest_finish_time) = latest_finish_time {
@@ -74,15 +67,12 @@ impl Handler {
 
                             match &cb {
                                 Callback::Sync(cb) => cb(info),
-                                Callback::Async(_) => unreachable!(),
+                                Callback::Async(cb) => cb(info).await,
                             }
 
                             latest_finish_time = Some(time);
                         }
-                        Err(RecvTimeoutError::Timeout) => {
-                            continue;
-                        }
-                        Err(RecvTimeoutError::Disconnected) => {
+                        None => {
                             break;
                         }
                     }
@@ -99,7 +89,7 @@ impl Handler {
         if let Some(cb) = initialized_cb {
             match &cb {
                 Callback::Sync(cb) => cb(CallbackInfo::new()),
-                Callback::Async(_) => unreachable!(),
+                Callback::Async(cb) => cb(CallbackInfo::new()).await,
             }
         }
 
@@ -107,9 +97,9 @@ impl Handler {
         //
         //
         loop {
-            match register_rx.recv_timeout(Duration::from_secs(30)) {
+            match register_rx.recv().await {
                 #[cfg(not(windows))]
-                Ok(RegisterType::ReloadConfig) => {
+                Some(RegisterType::ReloadConfig) => {
                     if let Some(tx_callback) = callback_tx_map.get(&CallbackType::ReloadConfig) {
                         #[allow(clippy::single_match)]
                         match tx_callback.send(CallbackInfo::new()) {
@@ -121,11 +111,11 @@ impl Handler {
                     }
                     continue;
                 }
-                Ok(RegisterType::WaitForStop) => {
+                Some(RegisterType::WaitForStop) => {
                     if let Some(cb) = wait_for_stop_cb {
                         match &cb {
                             Callback::Sync(cb) => cb(CallbackInfo::new()),
-                            Callback::Async(_) => unreachable!(),
+                            Callback::Async(cb) => cb(CallbackInfo::new()).await,
                         }
                     }
 
@@ -134,7 +124,7 @@ impl Handler {
                     break;
                 }
                 #[cfg(not(windows))]
-                Ok(RegisterType::PrintStats) => {
+                Some(RegisterType::PrintStats) => {
                     if let Some(tx_callback) = callback_tx_map.get(&CallbackType::PrintStats) {
                         #[allow(clippy::single_match)]
                         match tx_callback.send(CallbackInfo::new()) {
@@ -146,10 +136,7 @@ impl Handler {
                     }
                     continue;
                 }
-                Err(RecvTimeoutError::Timeout) => {
-                    continue;
-                }
-                Err(RecvTimeoutError::Disconnected) => break,
+                None => break,
             }
         }
 
@@ -160,11 +147,17 @@ impl Handler {
             drop(tx);
         }
 
+        for (_, join_handle) in callback_join_handle_map.iter() {
+            join_handle.abort();
+        }
         for (_, join_handle) in callback_join_handle_map {
-            match join_handle.join() {
+            match join_handle.await {
                 Ok(_) => {}
+                Err(err) if err.is_cancelled() => {}
                 Err(err) => {
-                    panic::resume_unwind(err);
+                    if let Ok(err) = err.try_into_panic() {
+                        panic::resume_unwind(err);
+                    }
                 }
             }
         }

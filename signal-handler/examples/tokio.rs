@@ -85,7 +85,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         })
         .build();
 
-    handler.handle()?;
+    handler.handle_async().await?;
 
     //
     tcp_accept_join_handle.abort();
