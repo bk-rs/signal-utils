@@ -1,7 +1,16 @@
 [package]
 name = "signal-handler"
 version = "0.0.0"
+authors = ["vkill <vkill.net@gmail.com>"]
 edition = "2021"
+description = "Signal Handler"
+license = "Apache-2.0 OR MIT"
+repository = "https://github.com/bk-rs/signal-utils"
+homepage = "https://github.com/bk-rs/signal-utils"
+documentation = "https://docs.rs/signal-handler"
+keywords = []
+categories = []
+readme = "README.md"
 
 [package.metadata.docs.rs]
 all-features = true

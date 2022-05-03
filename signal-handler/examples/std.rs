@@ -99,6 +99,9 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             }
         })
         .wait_for_stop(|info| {
+            // e.g.
+            // rocksdb::DBWithThreadMode::flush_wal
+
             println!("wait_for_stop info:{:?}", info);
         })
         .build();
