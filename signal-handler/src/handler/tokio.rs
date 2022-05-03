@@ -57,10 +57,8 @@ impl Handler {
                 loop {
                     match rx.recv().await {
                         Some(info) => {
-                            let time = info.time().to_owned();
-
                             if let Some(latest_finish_time) = latest_finish_time {
-                                if latest_finish_time > time {
+                                if latest_finish_time > *info.time() {
                                     continue;
                                 }
                             }
@@ -70,7 +68,7 @@ impl Handler {
                                 Callback::Async(cb) => cb(info).await,
                             }
 
-                            latest_finish_time = Some(time);
+                            latest_finish_time = Some(CallbackInfo::time_now());
                         }
                         None => {
                             break;
@@ -147,13 +145,9 @@ impl Handler {
             drop(tx);
         }
 
-        for (_, join_handle) in callback_join_handle_map.iter() {
-            join_handle.abort();
-        }
         for (_, join_handle) in callback_join_handle_map {
             match join_handle.await {
                 Ok(_) => {}
-                Err(err) if err.is_cancelled() => {}
                 Err(err) => {
                     if let Ok(err) = err.try_into_panic() {
                         panic::resume_unwind(err);

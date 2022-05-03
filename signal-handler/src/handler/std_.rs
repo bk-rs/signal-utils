@@ -64,10 +64,8 @@ impl Handler {
                 loop {
                     match rx.recv_timeout(Duration::from_secs(30)) {
                         Ok(info) => {
-                            let time = info.time().to_owned();
-
                             if let Some(latest_finish_time) = latest_finish_time {
-                                if latest_finish_time > time {
+                                if latest_finish_time > *info.time() {
                                     continue;
                                 }
                             }
@@ -77,7 +75,7 @@ impl Handler {
                                 Callback::Async(_) => unreachable!(),
                             }
 
-                            latest_finish_time = Some(time);
+                            latest_finish_time = Some(CallbackInfo::time_now());
                         }
                         Err(RecvTimeoutError::Timeout) => {
                             continue;

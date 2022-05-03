@@ -2,15 +2,16 @@
 RUST_BACKTRACE=1 RUST_LOG=trace cargo run -p signal-handler --example std --
 */
 
+use core::{
+    sync::atomic::{AtomicUsize, Ordering},
+    time::Duration,
+};
 use std::{
     error,
     io::{Error as IoError, Read as _, Write as _},
     net::TcpListener,
     process,
-    sync::{
-        atomic::{AtomicUsize, Ordering},
-        mpsc, Arc,
-    },
+    sync::{mpsc, Arc},
     thread::{self, JoinHandle},
     time::Instant,
 };
@@ -80,6 +81,8 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         .reload_config({
             let ctx = ctx.clone();
             move |info| {
+                thread::sleep(Duration::from_secs(3));
+
                 ctx.fetch_add(1, Ordering::SeqCst);
                 println!("reload_config info:{:?}", info);
             }

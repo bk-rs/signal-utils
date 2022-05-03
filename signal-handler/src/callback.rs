@@ -29,6 +29,10 @@ impl CallbackInfo {
     pub fn time(&self) -> &SystemTime {
         &self.time
     }
+
+    pub fn time_now() -> SystemTime {
+        SystemTime::now()
+    }
 }
 
 //

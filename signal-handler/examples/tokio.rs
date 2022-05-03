@@ -1,21 +1,16 @@
+#![allow(unused_imports)]
+
 /*
 RUST_BACKTRACE=1 RUST_LOG=trace cargo run -p signal-handler --example tokio --
 */
 
-use std::{
-    error,
-    io::Error as IoError,
-    process,
-    sync::{
-        atomic::{AtomicUsize, Ordering},
-        Arc,
-    },
-    time::Instant,
-};
+use core::sync::atomic::{AtomicUsize, Ordering};
+use std::{error, io::Error as IoError, process, sync::Arc, time::Instant};
 
 use tokio::{net::TcpListener, sync::mpsc, task::JoinHandle};
 
 //
+#[cfg(feature = "tokio")]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn error::Error>> {
     let port = portpicker::pick_unused_port().expect("No ports free");
@@ -72,6 +67,8 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 let ctx = ctx.clone();
 
                 Box::pin(async move {
+                    tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+
                     ctx.fetch_add(1, Ordering::SeqCst);
                     println!("reload_config_async info:{:?}", info);
                 })
@@ -99,5 +96,10 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     tcp_accept_join_handle.abort();
     assert!(tcp_accept_join_handle.await.unwrap_err().is_cancelled());
 
+    Ok(())
+}
+
+#[cfg(not(feature = "tokio"))]
+fn main() -> Result<(), Box<dyn error::Error>> {
     Ok(())
 }
