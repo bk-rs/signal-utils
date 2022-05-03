@@ -52,21 +52,29 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     let instant = Instant::now();
 
     let handler = signal_handler::Handler::builder()
-        .initialized(move |info| {
-            println!("initialized info:{:?}", info);
-            tcp_accept_tx.send(()).unwrap();
+        .initialized_async(move |info| {
+            let tcp_accept_tx = tcp_accept_tx.clone();
 
-            let pid = process::id();
-            println!("kill -HUP {}", pid);
-            println!("kill -USR1 {}", pid);
-            println!("kill -TERM {}", pid);
-            println!("Control-C");
+            Box::pin(async move {
+                println!("initialized_async info:{:?}", info);
+                tcp_accept_tx.send(()).unwrap();
+
+                let pid = process::id();
+                println!("kill -HUP {}", pid);
+                println!("kill -USR1 {}", pid);
+                println!("kill -TERM {}", pid);
+                println!("Control-C");
+            })
         })
-        .reload_config({
+        .reload_config_async({
             let ctx = ctx.clone();
             move |info| {
-                ctx.fetch_add(1, Ordering::SeqCst);
-                println!("reload_config info:{:?}", info);
+                let ctx = ctx.clone();
+
+                Box::pin(async move {
+                    ctx.fetch_add(1, Ordering::SeqCst);
+                    println!("reload_config_async info:{:?}", info);
+                })
             }
         })
         .print_stats({
