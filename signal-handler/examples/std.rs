@@ -87,7 +87,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         })
         .print_stats({
-            let ctx = ctx.clone();
             move |info| {
                 println!(
                     "print_stats info:{:?} ctx:{:?} uptime:{:?}",
