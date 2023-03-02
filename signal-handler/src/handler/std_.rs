@@ -27,7 +27,7 @@ impl Handler {
         //
         //
         //
-        let (register_tx, register_rx) = sync_channel::<RegisterType>(0);
+        let (register_tx, register_rx) = sync_channel::<RegisterType>(6);
 
         let _sig_id_map = registers
             .register(register_tx)
@@ -62,7 +62,7 @@ impl Handler {
                 let mut latest_finish_time = None;
 
                 loop {
-                    match rx.recv_timeout(Duration::from_secs(30)) {
+                    match rx.recv_timeout(Duration::from_secs(1)) {
                         Ok(info) => {
                             if let Some(latest_finish_time) = latest_finish_time {
                                 if latest_finish_time > *info.time() {
@@ -105,7 +105,7 @@ impl Handler {
         //
         //
         loop {
-            match register_rx.recv_timeout(Duration::from_secs(30)) {
+            match register_rx.recv_timeout(Duration::from_secs(1)) {
                 #[cfg(not(windows))]
                 Ok(RegisterType::ReloadConfig) => {
                     if let Some(tx_callback) = callback_tx_map.get(&CallbackType::ReloadConfig) {
