@@ -7,7 +7,6 @@ use core::{
     time::Duration,
 };
 use std::{
-    error,
     io::{Error as IoError, Read as _, Write as _},
     net::TcpListener,
     process,
@@ -17,7 +16,7 @@ use std::{
 };
 
 //
-fn main() -> Result<(), Box<dyn error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let port = portpicker::pick_unused_port().expect("No ports free");
     let listener = TcpListener::bind(format!("127.0.0.1:{}", port))?;
 

@@ -5,14 +5,14 @@ RUST_BACKTRACE=1 RUST_LOG=trace cargo run -p signal-handler --example tokio --
 */
 
 use core::sync::atomic::{AtomicUsize, Ordering};
-use std::{error, io::Error as IoError, process, sync::Arc, time::Instant};
+use std::{io::Error as IoError, process, sync::Arc, time::Instant};
 
 use tokio::{net::TcpListener, sync::mpsc, task::JoinHandle};
 
 //
 #[cfg(feature = "tokio")]
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let port = portpicker::pick_unused_port().expect("No ports free");
     let listener = TcpListener::bind(format!("127.0.0.1:{}", port)).await?;
 
@@ -103,6 +103,6 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 }
 
 #[cfg(not(feature = "tokio"))]
-fn main() -> Result<(), Box<dyn error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }

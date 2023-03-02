@@ -1,5 +1,3 @@
-use core::fmt;
-
 use crate::register::RegisterError;
 
 //
@@ -34,8 +32,8 @@ pub enum HandleError {
     Other(Box<dyn std::error::Error + Send + Sync + 'static>),
 }
 
-impl fmt::Display for HandleError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl core::fmt::Display for HandleError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{:?}", self)
     }
 }
