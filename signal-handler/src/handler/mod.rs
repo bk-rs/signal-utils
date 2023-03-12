@@ -2,9 +2,10 @@ use crate::register::RegisterError;
 
 //
 pub mod builder;
-mod std_;
-#[cfg(feature = "tokio")]
-mod tokio;
+
+mod impl_std;
+#[cfg(feature = "impl_tokio")]
+mod impl_tokio;
 
 pub use builder::Builder;
 

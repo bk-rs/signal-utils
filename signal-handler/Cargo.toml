@@ -16,10 +16,13 @@ readme = "README.md"
 all-features = true
 
 [features]
-default = ["tokio"]
+default = ["impl_tokio"]
+
+impl_tokio = ["tokio", "channel-sender/impl_tokio"]
 
 [dependencies]
 signal-hook = { version = "0.3", default-features = false }
+channel-sender = { version = "0.1", default-features = false }
 
 tokio = { version = "1", default-features = false, features = ["rt", "sync"], optional = true }
 

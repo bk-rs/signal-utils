@@ -3,7 +3,7 @@ RUST_BACKTRACE=1 RUST_LOG=trace cargo run -p signal-handler --example tokio --
 */
 
 //
-#[cfg(feature = "tokio")]
+#[cfg(feature = "impl_tokio")]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     use core::sync::atomic::{AtomicUsize, Ordering};
@@ -91,7 +91,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         })
         .build();
 
-    handler.handle_async().await?;
+    handler.handle_async_with_tokio().await?;
 
     //
     tcp_accept_join_handle.abort();
@@ -100,7 +100,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(not(feature = "tokio"))]
+#[cfg(not(feature = "impl_tokio"))]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }

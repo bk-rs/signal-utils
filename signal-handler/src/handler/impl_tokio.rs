@@ -10,7 +10,7 @@ use crate::{
 
 //
 impl Handler {
-    pub async fn handle_async(self) -> Result<(), HandleError> {
+    pub async fn handle_async_with_tokio(self) -> Result<(), HandleError> {
         let Builder {
             callbacks,
             registers,
