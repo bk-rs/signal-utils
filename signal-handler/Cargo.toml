@@ -22,7 +22,7 @@ impl_tokio = ["tokio", "channel-sender/impl_tokio"]
 
 [dependencies]
 signal-hook = { version = "0.3", default-features = false }
-channel-sender = { version = "0.2", default-features = false }
+channel-sender = { version = "0.4", default-features = false }
 
 tokio = { version = "1", default-features = false, features = ["rt", "sync"], optional = true }
 

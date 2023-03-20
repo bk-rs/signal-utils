@@ -1,7 +1,7 @@
 use core::ops::{Deref, DerefMut};
 use std::{collections::HashMap, io::Error as IoError};
 
-use channel_sender::{SendError, Sender};
+use channel_sender::{generic::Sender, SendError};
 use signal_hook::{
     consts::signal::*,
     low_level::{register, unregister},
